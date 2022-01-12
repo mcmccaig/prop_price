@@ -8,7 +8,8 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
 import numpy as np
-from visualize import value_per_year, value_per_ward
+from visualize import value_per_year, value_per_ward, value_per_building
+from vis_config import ZONE_DICT
 import json
 
 app = dash.Dash(__name__)
@@ -66,9 +67,30 @@ app.layout = html.Div(children=[
             options=[{'label': i, 'value': i} for i in year_list],
             value='All'
         )
+    ]),
 
-
-    ])
+      html.Div([
+        dcc.Graph(id='Building Value per Year'),
+        dcc.RadioItems(
+            id='building_type',
+            options=[{'label': i, 'value': i} for i in ZONE_DICT],
+            value='House'
+        ),        
+        dcc.RadioItems(
+            id='stat_dropdown3',
+            options=[
+                {'label': 'Average', 'value': 'Average'},
+                {'label': 'Median', 'value': 'Median'},
+            ],
+            value='Average',
+            labelStyle={'display': 'inline-block'}
+        ),
+        dcc.Dropdown(
+            id='location_dropdown2',
+            options=[{'label': i, 'value': i} for i in ward_list],
+            value='All'
+        )
+    ])  
 ])
 
 @app.callback(
@@ -100,6 +122,21 @@ def update_map(stat_select, year_select):
                            zoom=8.5
                           )
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+    return fig
+
+@app.callback(
+    Output('Building Value per Year', 'figure'),
+    Input('building_type', 'value'),
+    Input('stat_dropdown3', 'value'),
+    Input('location_dropdown2', 'value')
+    )
+
+def update_figure(building_select, stat_select, location_select):
+    stat_val_list, year_list = value_per_building(resi_house_data, stat_select, location_select, building_select)
+    fig = px.line(resi_house_data, x=year_list, y=stat_val_list, title='Building Value per Year')
+    fig.update_layout(transition_duration=500, yaxis_tickformat = "$.2f")
+    fig.update_xaxes(title='Year')
+    fig.update_yaxes(title='Assessed Value ($)')
     return fig
 
 if __name__ == '__main__':
