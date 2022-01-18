@@ -59,8 +59,24 @@ def value_per_building(df, measurement, ward='All', building_type='All'):
         stat_list, year_list = value_per_year(df, measurement, ward)
     return stat_list, year_list
              
+def value_per_neigh(df, measurement, ward="O-day'min Ward"):
+    ward_mask = df[df['Ward'] == ward]
+    neigh_list = sorted(ward_mask['Neighbourhood'].unique())
+    neigh_price_list = []
+    for neigh in neigh_list:
+        if measurement == 'Average':
+            mask = ward_mask[ward_mask['Neighbourhood'] == neigh]
+            neigh_price_list.append(mask['Assessed Value'].mean())
+        elif measurement == 'Median':
+            mask = ward_mask[ward_mask['Neighbourhood'] == neigh]
+            neigh_price_list.append(mask['Assessed Value'].median())
+        else:
+            raise ValueError('Not a correct measurement, use either Average or Median.')
+    return neigh_price_list, neigh_list
+
+
 
 # resi_house_data = pd.read_csv('prop_price/data/processed/Historical_clean.csv', dtype={'Suite': object})
-# stat_list, year_list = value_per_building(resi_house_data, 'Average', ward='papastew Ward', building_type='Townhouse')
-# stat_list, year_list = value_per_year(resi_house_data, measurement, ward='All')
-# print(stat_list)
+# neigh_price_list, neigh_list = value_per_neigh(resi_house_data, 'Average', ward="O-day'min Ward")
+# neigh_price_list, neigh_list = value_per_neigh(resi_house_data, measurement, ward='All')
+# print(neigh_price_list, neigh_list)
